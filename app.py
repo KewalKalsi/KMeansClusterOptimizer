@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 def show_kmeans_model():
     from Utility import show_kmeans
     rowTwo = [sg.Button(f"Clusters: {num}") for num in range(1, 11)]
-    elbow_window = sg.Window(title="KMeans", layout = [[sg.Canvas(key="Kmeans", size=(960,720))],rowTwo, [sg.Button("Quit")]], element_justification = 'c', finalize=True, modal = True)
+    elbow_window = sg.Window(title="KMeans", layout = [[sg.Canvas(key="Kmeans", size=(960,720), expand_x=True, expand_y=True)],rowTwo, [sg.Button("Quit")]], element_justification = 'c', finalize=True, modal = True, resizable=True)
     kmeans_agg = show_kmeans(elbow_window["Kmeans"].TKCanvas, 3)
     plt_canvas_agg = FigureCanvasTkAgg(kmeans_agg, elbow_window["Kmeans"].TKCanvas)
     plt_canvas_agg.draw()
@@ -22,14 +22,13 @@ def show_kmeans_model():
         if event[0:8] == "Clusters":
             elbow_window["Kmeans"].TKCanvas.delete("all")
             kmeans_agg = show_kmeans(elbow_window["Kmeans"].TKCanvas, int(event[10:11]))
-            #kmeans_agg.canvas.draw_idle()
             plt_canvas_agg.get_tk_widget().forget()
             plt.close('all')
             plt_canvas_agg = FigureCanvasTkAgg(kmeans_agg, elbow_window["Kmeans"].TKCanvas)
             plt_canvas_agg.draw_idle()
             plt_canvas_agg.get_tk_widget().pack(side="top", fill="both", expand=1)
             elbow_window.refresh()
-            #print(event[10:11])
+            #elbow_window.refresh()
     elbow_window.close()
 
 layout = [
