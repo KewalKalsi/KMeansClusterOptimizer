@@ -124,3 +124,26 @@ def get_bic_aic(k, X):
     gmm = GaussianMixture(n_components=k, init_params='kmeans')
     gmm.fit(X)
     return gmm.bic(X), gmm.aic(X)
+
+def plot_value(canvas, plotValue):
+    modHardData = pd.read_csv('Granite1Normalized.csv')
+
+    # Delete unneeded columns for our kmeans model
+    del modHardData["X - Normalized"]
+    del modHardData["Y - Normalized"]
+    del modHardData["Hardness(HV)"]
+    del modHardData["Test"]
+
+    df = pd.DataFrame([get_comparison_scores(k, modHardData) for k in range(2, 12)],
+                  columns=['k', 'BIC', 'AIC', 'silhouette',
+                           'davies', 'calinski'])
+    fig, ax = plt.subplots()
+    ax.plot(df['k'], df[plotValue])
+    ax.set_title(f'{plotValue} vs clusterCount')
+    ax.set_xlabel("Cluster Count")
+    ax.set_ylabel(plotValue)
+
+    plt_canvas_agg = FigureCanvasTkAgg(fig, canvas)
+    plt_canvas_agg.draw()
+    plt_canvas_agg.get_tk_widget().pack(side="top", fill="both", expand=1)
+    return plt_canvas_agg

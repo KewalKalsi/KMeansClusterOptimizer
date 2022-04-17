@@ -40,30 +40,63 @@ def show_kmeans_model():
 
 def show_characteristic_window():
     from Utility import calculate_characteristic_values
+    from Utility import plot_value
     df = calculate_characteristic_values()
     Characteristics = ["CLUSTERS", "BIC", "AIC", "SILHOUETTE", "DAVIES", "CALINSKI"]
     buttonRow = [sg.Button(Characteristics[i]) for i in range(0,6)]
     characteristics_window = sg.Window(
         title="Characteristics", 
-        layout = [buttonRow,[sg.Table(values=df.values.tolist(), headings = Characteristics, key="-data-")]], 
+        layout = [
+            buttonRow,
+            [sg.Table(values=df.values.tolist(), headings = Characteristics, key="-data-")],
+            [sg.Button("PLOT")]
+        ], 
         element_justification = 'c', 
         modal = True, 
         resizable=True,
-        margins = (320,240)
+        size = (960,240)
     )
+    plotValue = "CLUSTERS"
     while True:
-            event, values = characteristics_window.read()
-            if event == "Exit" or event == sg.WIN_CLOSED:
-                break
-            if event == "CLUSTERS":
-                df = df.sort_values(by=['k'], ascending = True)
-                print(df.to_string())
-                characteristics_window['data'].update(value = df.to_string())
-            if event == "DAVIES":
-                df = df.sort_values(by=['davies'], ascending = True)
-                characteristics_window['-data-'].update(values=df.values.tolist())
-                print(df)
-                characteristics_window.refresh()
+        event, values = characteristics_window.read()
+
+        if event == "Exit" or event == sg.WIN_CLOSED:
+            break
+        if event == "CLUSTERS":
+            df = df.sort_values(by=['k'], ascending = True)
+        if event == "DAVIES":
+            df = df.sort_values(by=['davies'], ascending = True)
+            plotValue = "davies"
+        if event == "AIC" or event == "BIC":
+            df = df.sort_values(by=[event], ascending = True)
+            plotValue = event
+        if event == "SILHOUETTE":
+            df = df.sort_values(by=['silhouette'], ascending = False)
+            plotValue = "silhouette"
+        if event == "CALINSKI":
+            df.sort_values(by=['calinski'], ascending = False)
+            plotValue = "calinski"
+        if event == "PLOT" and plotValue != "CLUSTERS":
+            plot_window = sg.Window(
+                title="{plotValue} PLOT", 
+                layout = [
+                    [sg.Canvas(key="-PLOT-", size=(960,720))],
+                    [sg.Button("Quit")]], 
+                element_justification = 'c', 
+                finalize=True, 
+                modal = True)
+            plot_value(plot_window["-PLOT-"].TKCanvas, plotValue)
+            while True:
+                event, values = plot_window.read()
+                if event == "Exit" or event == sg.WIN_CLOSED:
+                    break
+                if event == "Quit":
+                    break;    
+            plot_window.close()
+            
+        # Update data on screen
+        characteristics_window["-data-"].update(values = df.values.tolist())
+        characteristics_window.refresh()
     characteristics_window.close()
     
 
