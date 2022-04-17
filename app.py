@@ -8,7 +8,13 @@ import matplotlib.pyplot as plt
 def show_kmeans_model():
     from Utility import show_kmeans
     rowTwo = [sg.Button(f"Clusters: {num}") for num in range(1, 11)]
-    elbow_window = sg.Window(title="KMeans", layout = [[sg.Canvas(key="Kmeans", size=(960,720), expand_x=True, expand_y=True)],rowTwo, [sg.Button("Quit")]], element_justification = 'c', finalize=True, modal = True, resizable=True)
+    elbow_window = sg.Window(
+        title="KMeans", 
+        layout = [[sg.Canvas(key="Kmeans", size=(960,720), expand_x=True, expand_y=True)],rowTwo, [sg.Button("Quit")]], 
+        element_justification = 'c', 
+        finalize=True, 
+        modal = True, 
+        resizable=True)
     kmeans_agg = show_kmeans(elbow_window["Kmeans"].TKCanvas, 3)
     plt_canvas_agg = FigureCanvasTkAgg(kmeans_agg, elbow_window["Kmeans"].TKCanvas)
     plt_canvas_agg.draw()
@@ -30,6 +36,36 @@ def show_kmeans_model():
             elbow_window.refresh()
             #elbow_window.refresh()
     elbow_window.close()
+
+
+def show_characteristic_window():
+    from Utility import calculate_characteristic_values
+    df = calculate_characteristic_values()
+    Characteristics = ["CLUSTERS", "BIC", "AIC", "SILHOUETTE", "DAVIES", "CALINSKI"]
+    buttonRow = [sg.Button(Characteristics[i]) for i in range(0,6)]
+    characteristics_window = sg.Window(
+        title="Characteristics", 
+        layout = [buttonRow,[sg.Table(values=df.values.tolist(), headings = Characteristics, key="-data-")]], 
+        element_justification = 'c', 
+        modal = True, 
+        resizable=True,
+        margins = (320,240)
+    )
+    while True:
+            event, values = characteristics_window.read()
+            if event == "Exit" or event == sg.WIN_CLOSED:
+                break
+            if event == "CLUSTERS":
+                df = df.sort_values(by=['k'], ascending = True)
+                print(df.to_string())
+                characteristics_window['data'].update(value = df.to_string())
+            if event == "DAVIES":
+                df = df.sort_values(by=['davies'], ascending = True)
+                characteristics_window['-data-'].update(values=df.values.tolist())
+                print(df)
+                characteristics_window.refresh()
+    characteristics_window.close()
+    
 
 layout = [
     [sg.Text("How would you like to analyze clusters?", font = ("Arial, 20"))], 
@@ -60,7 +96,7 @@ while True:
                 break;    
         elbow_window.close()
     if event == "Characteristic Values of KMeans":
-        print("Characteristic Values of Kmeans Chosen ")
+        show_characteristic_window()
 
 window.close()
 

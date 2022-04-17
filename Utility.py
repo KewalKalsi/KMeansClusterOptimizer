@@ -38,14 +38,11 @@ def show_elbow_method(canvas):
         model.fit(modHardData)
         wcss.append(model.inertia_)
 
-    # Show Elbow plot
-    #plt.plot(range(1, 11), wcss)
-    #plt.title('Elbow Method')  # Set plot title
-    #plt.xlabel('Number of clusters')  # Set x axis name
-    #plt.ylabel('Within Cluster Sum of Squares (WCSS)')  # Set y axis name
     fig, ax = plt.subplots()
     ax.plot(range(1, 11), wcss)
     ax.set_title('Elbow Method')  # Set plot title
+    ax.set_xlabel('Number of Clusters') # Set x axis name 
+    ax.set_ylabel('Within Cluster Sum of Squares (WCSS)')
     #ax.xlabel('Number of clusters')  # Set x axis name
     #ax.ylabel('Within Cluster Sum of Squares (WCSS)')  # Set y axis name
 
@@ -53,7 +50,6 @@ def show_elbow_method(canvas):
     plt_canvas_agg.draw()
     plt_canvas_agg.get_tk_widget().pack(side="top", fill="both", expand=1)
     return plt_canvas_agg
-    #plt.show()
 
 def show_kmeans(canvas, clusters):
     modHardData = pd.read_csv('Granite1Normalized.csv')
@@ -90,3 +86,41 @@ def show_kmeans(canvas, clusters):
     plt_canvas_agg.get_tk_widget().pack(side="top", fill="both", expand=1)
     return plt_canvas_agg"""
     return fig
+
+def calculate_characteristic_values():
+    modHardData = pd.read_csv('Granite1Normalized.csv')
+
+    # Delete unneeded columns for our kmeans model
+    del modHardData["X - Normalized"]
+    del modHardData["Y - Normalized"]
+    del modHardData["Hardness(HV)"]
+    del modHardData["Test"]
+
+    df = pd.DataFrame([get_comparison_scores(k, modHardData) for k in range(2, 12)],
+                  columns=['k', 'BIC', 'AIC', 'silhouette',
+                           'davies', 'calinski'])
+    return df;
+
+def get_comparison_scores(idx, modHardData):
+    kmeans = KMeans(n_clusters=idx,  # Set amount of clusters
+                    init='k-means++',  # Initialization method for kmeans
+                    max_iter=300,  # Maximum number of iterations
+                    n_init=10,  # Choose how often algorithm will run with different centroid
+                    random_state=0)
+    kmeans.fit(modHardData)
+    y_pred = kmeans.predict(modHardData)
+    bic, aic = get_bic_aic(idx, modHardData) # lower is better
+    sil = silhouette_score(modHardData, y_pred) # higher is better
+    db = davies_bouldin_score(modHardData, y_pred) # lower is better
+    
+    #Cannot run these as we don't have correct expected values 
+    #hom = homogeneity_score(modHardData, y_pred)
+    #com = completeness_score(modHardData, y_pred)
+    #vms = v_measure_score(modHardData, y_pred)
+    cal = calinski_harabasz_score(modHardData, y_pred) # higher is better
+    return idx, bic, aic, sil, db, cal
+
+def get_bic_aic(k, X):
+    gmm = GaussianMixture(n_components=k, init_params='kmeans')
+    gmm.fit(X)
+    return gmm.bic(X), gmm.aic(X)

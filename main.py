@@ -49,8 +49,9 @@ def silhouette(df):
     print(df)
 
 def davies(df):
-    df.sort_values(by=['davies'], ascending = True)
+    df = df.sort_values(by=['davies'], ascending = True)
     print(df)
+    print("THIS IS DAVIES")
 
 def calinski(df):
     df.sort_values(by=['calinski'], ascending = False)
