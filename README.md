@@ -7,10 +7,10 @@ The app supports plotting the fit data set over different cluster counts, plotti
 ### How To Run 
 
 To run the app with GUI, use the command:  
-python app.py   
+`python app.py`  
 
 To run the app through text commands (which may not be as up-to-date as the GUI), use the command:   
-python main.py  
+`python main.py`  
 
 Note - Depending on you're python install "python" may have to be replaced by "python3" when running the commands above.    
 
