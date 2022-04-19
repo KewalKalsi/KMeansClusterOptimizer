@@ -2,7 +2,7 @@
 
 This is a simple application utilizing PySimpleGUI. The functionality within the app is based off of two nanoindentation data sets, one that contains just Modulus and Hardness values and the other that contains Modulus, Hardness, as well as X and Y coordinates. 
 
-The app supports plotting the fit data set over different cluster counts, plotting the elbow method to determine optimal cluster count, and analyzing/plottign specific characteristic values for each cluster count.
+The app supports plotting the fit data set over different cluster counts, plotting the elbow method to determine optimal cluster count, and analyzing/plotting specific characteristic values for each cluster count.
 
 ### How To Run 
 
