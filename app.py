@@ -1,5 +1,6 @@
 import PySimpleGUI as sg
-from Utility import show_elbow_method
+from pyparsing import Char
+from Utility import plot_scaled_difference, show_elbow_method
 import matplotlib
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import numpy as np
@@ -68,7 +69,9 @@ def show_kmeans_model():
 def show_characteristic_window():
     from Utility import calculate_characteristic_values
     from Utility import plot_value
-    df = calculate_characteristic_values()
+    from Utility import plot_values
+    useXY = False
+    df = calculate_characteristic_values(useXY)
     Characteristics = ["CLUSTERS", "BIC", "AIC", "SILHOUETTE", "DAVIES", "CALINSKI"]
     buttonRow = [sg.Button(Characteristics[i]) for i in range(0,6)]
     characteristics_window = sg.Window(
@@ -76,17 +79,17 @@ def show_characteristic_window():
         layout = [
             buttonRow,
             [sg.Table(values=df.values.tolist(), headings = Characteristics, key="-data-")],
-            [sg.Button("PLOT"), sg.Button("VS PLOT"), sg.Button("PLOT SCALED DIFFERENCE")]
+            [sg.Button("PLOT"), sg.Button("VS PLOT"), sg.Button("PLOT SCALED DIFFERENCE"), sg.Button("SWAP DATASET")]
         ], 
         element_justification = 'c', 
         modal = True, 
         resizable=True,
-        size = (960,240)
+        size = (960,240),
+        keep_on_top = True
     )
     plotValue = "CLUSTERS"
     while True:
         event, values = characteristics_window.read()
-
         if event == "Exit" or event == sg.WIN_CLOSED:
             break
         if event == "CLUSTERS":
@@ -103,7 +106,11 @@ def show_characteristic_window():
         if event == "CALINSKI":
             df = df.sort_values(by=['calinski'], ascending = False)
             plotValue = "calinski"
+        if event == "SWAP DATASET": 
+            useXY = not useXY
+            df = calculate_characteristic_values(useXY)
         if event == "PLOT" and plotValue != "CLUSTERS":
+            df = df.sort_values(by='k', ascending = True)
             plot_window = sg.Window(
                 title="{plotValue} PLOT", 
                 layout = [
@@ -111,8 +118,9 @@ def show_characteristic_window():
                     [sg.Button("Quit")]], 
                 element_justification = 'c', 
                 finalize=True, 
-                modal = True)
-            plot_value(plot_window["-PLOT-"].TKCanvas, plotValue)
+                modal = True,
+                keep_on_top = True)
+            plot_value(plot_window["-PLOT-"].TKCanvas, plotValue, df)
             while True:
                 event, values = plot_window.read()
                 if event == "Exit" or event == sg.WIN_CLOSED:
@@ -120,8 +128,64 @@ def show_characteristic_window():
                 if event == "Quit":
                     break;    
             plot_window.close()
+        if event == "PLOT SCALED DIFFERENCE" and plotValue != "CLUSTERS":
+            df = df.sort_values(by='k', ascending = True)
+            plot_window = sg.Window(
+                title="{plotValue} PLOT", 
+                layout = [
+                    [sg.Canvas(key="-PLOT-", size=(960,720))],
+                    [sg.Button("Quit")]], 
+                element_justification = 'c', 
+                finalize=True, 
+                modal = True,
+                keep_on_top = True)
+            plot_scaled_difference(plot_window["-PLOT-"].TKCanvas, plotValue, df)
+            while True:
+                event, values = plot_window.read()
+                if event == "Exit" or event == sg.WIN_CLOSED:
+                    break
+                if event == "Quit":
+                    break;    
+            plot_window.close()
+        if event == "VS PLOT":
+            df = df.sort_values(by='k', ascending = True)
+            Characteristics = ["BIC", "AIC", "silhouette", "davies", "calinski"]
+            plotList = []
+            vs_plot = sg.Window(
+                title="{plotValue} PLOT", 
+                layout = [[[sg.Checkbox(i, enable_events= True)] for i in Characteristics],[sg.Button("Plot!")]], 
+                element_justification = 'l', 
+                finalize=True, 
+                modal = True,
+                keep_on_top = True)
+            while True:
+                event, values = vs_plot.read()
+                if event == "Exit" or event == sg.WIN_CLOSED:
+                    break 
+                elif event == "Plot!":
+                    multi_plot = sg.Window(
+                        title="{plotValue} PLOT", 
+                        layout = [
+                            [sg.Canvas(key="-multi-", size=(960,720))],
+                            [sg.Button("Quit")]], 
+                    element_justification = 'c', 
+                    finalize=True, 
+                    modal = True,
+                    keep_on_top = True)
+                    plot_values(multi_plot["-multi-"].TKCanvas, plotList, df)
+                    while True:
+                        event, values = multi_plot.read()
+                        if event == "Exit" or event == sg.WIN_CLOSED:
+                            break
+                        if event == "Quit":
+                            break;    
+                    multi_plot.close()
+                    vs_plot.close()
+                else:
+                    plotList.append((Characteristics[event]))
+            vs_plot.close()
             
-        # Update data on screen
+        # Update data on screen 
         characteristics_window["-data-"].update(values = df.values.tolist())
         characteristics_window.refresh()
     characteristics_window.close()
